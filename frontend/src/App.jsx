@@ -107,10 +107,10 @@ function App() {
   const fetchData = async () => {
     try {
       const [tRes, uRes, sRes, pRes] = await Promise.all([
-        axios.get('http://127.0.0.1:8000/tasks/'),
-        axios.get('http://127.0.0.1:8000/users/'),
-        axios.get('http://127.0.0.1:8000/sprints/'),
-        axios.get('http://127.0.0.1:8000/projects/') 
+        axios.get('http://136.111.161.239:8000/tasks/'),
+        axios.get('http://136.111.161.239:8000/users/'),
+        axios.get('http://136.111.161.239:8000/sprints/'),
+        axios.get('http://136.111.161.239:8000/projects/') 
       ])
       setTasks(tRes.data); setUsers(uRes.data); setSprints(sRes.data); setProjects(pRes.data)
       
@@ -166,7 +166,7 @@ function App() {
   }
 
   const handleTaskClick = (task) => {
-    axios.get(`http://127.0.0.1:8000/tasks/${task.id}`)
+    axios.get(`http://136.111.161.239:8000/tasks/${task.id}`)
       .then(res => {
         setEditingTask({ ...res.data.task, subtasks: res.data.subtasks || [] })
         setShowSubtaskForm(false)
@@ -185,7 +185,7 @@ function App() {
     
     const targetTask = tasks.find(t => t.id.toString() === taskId)
     if (targetTask && targetTask.status !== newStatus) {
-      axios.patch(`http://127.0.0.1:8000/tasks/${taskId}/status?new_status=${newStatus}`)
+      axios.patch(`http://136.111.161.239:8000/tasks/${taskId}/status?new_status=${newStatus}`)
         .then(() => {
           setTasks(prev => prev.map(t => t.id.toString() === taskId ? { ...t, status: newStatus } : t))
         })
@@ -195,7 +195,7 @@ function App() {
 
   const handleCreateProject = (e) => {
     e.preventDefault()
-    axios.post('http://127.0.0.1:8000/projects/', projectFormData).then((res) => {
+    axios.post('http://136.111.161.239:8000/projects/', projectFormData).then((res) => {
       fetchData()
       setShowProjectForm(false)
       setCurrentProjectId(res.data.id)
@@ -210,7 +210,7 @@ function App() {
       return
     }
     const payload = { ...formData, project_id: currentProjectId }
-    axios.post('http://127.0.0.1:8000/tasks/', payload).then(() => {
+    axios.post('http://136.111.161.239:8000/tasks/', payload).then(() => {
       fetchData()
       setShowForm(false)
       setFormData({ title: '', description: '', status: 'To Do', priority: 'Medium', sprint_id: '', assignee_id: '' })
@@ -238,7 +238,7 @@ function App() {
     }
 
     const payload = { ...sprintFormData, project_id: currentProjectId, start_date: new Date(), end_date: new Date(), is_active: true }
-    axios.post('http://127.0.0.1:8000/sprints/', payload).then(() => {
+    axios.post('http://136.111.161.239:8000/sprints/', payload).then(() => {
       fetchData()
       setSprintFormData({ name: '', start_month: 'April', start_week: 1, end_month: 'April', end_week: 2, color: '#0052cc' })
     }).catch(err => console.error(err))
@@ -246,7 +246,7 @@ function App() {
 
   const handleCreateMember = (e) => {
     e.preventDefault()
-    axios.post('http://127.0.0.1:8000/users/', memberFormData)
+    axios.post('http://136.111.161.239:8000/users/', memberFormData)
       .then(() => {
         fetchData()
         setShowMemberForm(false)
@@ -257,7 +257,7 @@ function App() {
 
   const handleDeleteSprint = (sprintId) => {
     if (window.confirm("WARNING: Deleting this sprint will PERMANENTLY delete all tasks within it. Are you sure?")) {
-      axios.delete(`http://127.0.0.1:8000/sprints/${sprintId}`)
+      axios.delete(`http://136.111.161.239:8000/sprints/${sprintId}`)
         .then(() => {
           if (selectedBoardSprint === sprintId) setSelectedBoardSprint(null)
           fetchData()
@@ -268,7 +268,7 @@ function App() {
 
   const handleUpdateTask = (e) => {
     e.preventDefault()
-    axios.put(`http://127.0.0.1:8000/tasks/${editingTask.id}`, editingTask)
+    axios.put(`http://136.111.161.239:8000/tasks/${editingTask.id}`, editingTask)
       .then(() => { fetchData(); setEditingTask(null); })
       .catch(err => console.error(err))
   }
@@ -276,7 +276,7 @@ function App() {
   const handleAddSubtask = (e) => {
     if (e) e.preventDefault()
     if (!newSubtaskTitle.trim()) return
-    axios.post('http://127.0.0.1:8000/subtasks/', { title: newSubtaskTitle, status: "To Do", task_id: editingTask.id })
+    axios.post('http://136.111.161.239:8000/subtasks/', { title: newSubtaskTitle, status: "To Do", task_id: editingTask.id })
       .then((res) => {
         setEditingTask(prev => ({ ...prev, subtasks: [...prev.subtasks, res.data] }))
         setNewSubtaskTitle(''); setShowSubtaskForm(false);
@@ -284,7 +284,7 @@ function App() {
   }
 
   const handleUpdateSubtaskStatus = (subtaskId, newStatus) => {
-    axios.patch(`http://127.0.0.1:8000/subtasks/${subtaskId}/status?new_status=${newStatus}`)
+    axios.patch(`http://136.111.161.239:8000/subtasks/${subtaskId}/status?new_status=${newStatus}`)
       .then(() => {
         setEditingTask(prev => ({ ...prev, subtasks: prev.subtasks.map(st => st.id === subtaskId ? { ...st, status: newStatus } : st) }))
         fetchData()
@@ -292,7 +292,7 @@ function App() {
   }
 
   const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this task?")) axios.delete(`http://127.0.0.1:8000/tasks/${id}`).then(() => fetchData())
+    if (window.confirm("Are you sure you want to delete this task?")) axios.delete(`http://136.111.161.239:8000/tasks/${id}`).then(() => fetchData())
   }
 
   const currentSprintName = currentProjectSprints.find(s => s.id === selectedBoardSprint)?.name || 'Select Sprint'
