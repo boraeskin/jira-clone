@@ -4,6 +4,9 @@ import { Layout, CheckCircle2, Clock, Trash2, User, ListTodo, Kanban, Calendar, 
 import { DndContext, closestCorners, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { useDroppable, useDraggable } from '@dnd-kit/core'
 
+// MERKEZİ API YAPILANDIRMASI
+const API_BASE_URL = 'http://136.111.161.239:8000'
+
 // --- 1. DRAGGABLE TASK COMPONENT ---
 function DraggableTask({ task, onDelete, users, onTaskClick }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -68,7 +71,7 @@ function DroppableColumn({ id, tasks, onDelete, users, onTaskClick }) {
 }
 
 // --- 3. MAIN APPLICATION ---
-function App() {
+boxStyle: function App() {
   const [activeTab, setActiveTab] = useState('timeline')
   const [projects, setProjects] = useState([]) 
   const [currentProjectId, setCurrentProjectId] = useState(null) 
@@ -107,10 +110,10 @@ function App() {
   const fetchData = async () => {
     try {
       const [tRes, uRes, sRes, pRes] = await Promise.all([
-        axios.get('http://136.111.161.239:8000/tasks/'),
-        axios.get('http://136.111.161.239:8000/users/'),
-        axios.get('http://136.111.161.239:8000/sprints/'),
-        axios.get('http://136.111.161.239:8000/projects/') 
+        axios.get(`${API_BASE_URL}/tasks/`),
+        axios.get(`${API_BASE_URL}/users/`),
+        axios.get(`${API_BASE_URL}/sprints/`),
+        axios.get(`${API_BASE_URL}/projects/`) 
       ])
       setTasks(tRes.data); setUsers(uRes.data); setSprints(sRes.data); setProjects(pRes.data)
       
@@ -143,7 +146,6 @@ function App() {
     }
   }, [activeTab, sprints])
 
-  // Projeye bağlı filtreleme yapıları tamamen eşitleyen güvenli havuz
   const currentProjectSprints = sprints.filter(s => s.project_id === currentProjectId)
   const currentProjectTasks = tasks.filter(t => t.project_id === currentProjectId)
 
@@ -166,7 +168,7 @@ function App() {
   }
 
   const handleTaskClick = (task) => {
-    axios.get(`http://136.111.161.239:8000/tasks/${task.id}`)
+    axios.get(`${API_BASE_URL}/tasks/${task.id}`)
       .then(res => {
         setEditingTask({ ...res.data.task, subtasks: res.data.subtasks || [] })
         setShowSubtaskForm(false)
@@ -185,7 +187,7 @@ function App() {
     
     const targetTask = tasks.find(t => t.id.toString() === taskId)
     if (targetTask && targetTask.status !== newStatus) {
-      axios.patch(`http://136.111.161.239:8000/tasks/${taskId}/status?new_status=${newStatus}`)
+      axios.patch(`${API_BASE_URL}/tasks/${taskId}/status?new_status=${newStatus}`)
         .then(() => {
           setTasks(prev => prev.map(t => t.id.toString() === taskId ? { ...t, status: newStatus } : t))
         })
@@ -195,7 +197,7 @@ function App() {
 
   const handleCreateProject = (e) => {
     e.preventDefault()
-    axios.post('http://136.111.161.239:8000/projects/', projectFormData).then((res) => {
+    axios.post(`${API_BASE_URL}/projects/`, projectFormData).then((res) => {
       fetchData()
       setShowProjectForm(false)
       setCurrentProjectId(res.data.id)
@@ -210,14 +212,13 @@ function App() {
       return
     }
     const payload = { ...formData, project_id: currentProjectId }
-    axios.post('http://136.111.161.239:8000/tasks/', payload).then(() => {
+    axios.post(`${API_BASE_URL}/tasks/`, payload).then(() => {
       fetchData()
       setShowForm(false)
       setFormData({ title: '', description: '', status: 'To Do', priority: 'Medium', sprint_id: '', assignee_id: '' })
     })
   }
 
-  // DÜZELTME: Sprint eklerken zaman mantığını denetleyen koruma filtresi entegre edildi
   const handleCreateSprint = (e) => {
     e.preventDefault()
     if (!currentProjectId) return alert("Please select or create a project first!")
@@ -225,20 +226,18 @@ function App() {
     const startIndex = months.indexOf(sprintFormData.start_month)
     const endIndex = months.indexOf(sprintFormData.end_month)
     
-    // Senaryo 1: Bitiş ayı başlangıç ayından önce seçilemez
     if (startIndex > endIndex) {
       alert(`Invalid Timeline: End month (${sprintFormData.end_month}) cannot be chronologically before start month (${sprintFormData.start_month})!`)
       return
     }
     
-    // Senaryo 2: Aynı ay seçildiyse bitiş haftası başlangıç haftasından önce olamaz
     if (startIndex === endIndex && sprintFormData.start_week > sprintFormData.end_week) {
       alert(`Invalid Timeline: In ${sprintFormData.start_month}, End week (W${sprintFormData.end_week}) cannot be before start week (W${sprintFormData.start_week})!`)
       return
     }
 
     const payload = { ...sprintFormData, project_id: currentProjectId, start_date: new Date(), end_date: new Date(), is_active: true }
-    axios.post('http://136.111.161.239:8000/sprints/', payload).then(() => {
+    axios.post(`${API_BASE_URL}/sprints/`, payload).then(() => {
       fetchData()
       setSprintFormData({ name: '', start_month: 'April', start_week: 1, end_month: 'April', end_week: 2, color: '#0052cc' })
     }).catch(err => console.error(err))
@@ -246,7 +245,7 @@ function App() {
 
   const handleCreateMember = (e) => {
     e.preventDefault()
-    axios.post('http://136.111.161.239:8000/users/', memberFormData)
+    axios.post(`${API_BASE_URL}/users/`, memberFormData)
       .then(() => {
         fetchData()
         setShowMemberForm(false)
@@ -257,7 +256,7 @@ function App() {
 
   const handleDeleteSprint = (sprintId) => {
     if (window.confirm("WARNING: Deleting this sprint will PERMANENTLY delete all tasks within it. Are you sure?")) {
-      axios.delete(`http://136.111.161.239:8000/sprints/${sprintId}`)
+      axios.delete(`${API_BASE_URL}/sprints/${sprintId}`)
         .then(() => {
           if (selectedBoardSprint === sprintId) setSelectedBoardSprint(null)
           fetchData()
@@ -268,7 +267,7 @@ function App() {
 
   const handleUpdateTask = (e) => {
     e.preventDefault()
-    axios.put(`http://136.111.161.239:8000/tasks/${editingTask.id}`, editingTask)
+    axios.put(`${API_BASE_URL}/tasks/${editingTask.id}`, editingTask)
       .then(() => { fetchData(); setEditingTask(null); })
       .catch(err => console.error(err))
   }
@@ -276,7 +275,7 @@ function App() {
   const handleAddSubtask = (e) => {
     if (e) e.preventDefault()
     if (!newSubtaskTitle.trim()) return
-    axios.post('http://136.111.161.239:8000/subtasks/', { title: newSubtaskTitle, status: "To Do", task_id: editingTask.id })
+    axios.post(`${API_BASE_URL}/subtasks/`, { title: newSubtaskTitle, status: "To Do", task_id: editingTask.id })
       .then((res) => {
         setEditingTask(prev => ({ ...prev, subtasks: [...prev.subtasks, res.data] }))
         setNewSubtaskTitle(''); setShowSubtaskForm(false);
@@ -284,7 +283,7 @@ function App() {
   }
 
   const handleUpdateSubtaskStatus = (subtaskId, newStatus) => {
-    axios.patch(`http://136.111.161.239:8000/subtasks/${subtaskId}/status?new_status=${newStatus}`)
+    axios.patch(`${API_BASE_URL}/subtasks/${subtaskId}/status?new_status=${newStatus}`)
       .then(() => {
         setEditingTask(prev => ({ ...prev, subtasks: prev.subtasks.map(st => st.id === subtaskId ? { ...st, status: newStatus } : st) }))
         fetchData()
@@ -292,7 +291,7 @@ function App() {
   }
 
   const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this task?")) axios.delete(`http://136.111.161.239:8000/tasks/${id}`).then(() => fetchData())
+    if (window.confirm("Are you sure you want to delete this task?")) axios.delete(`${API_BASE_URL}/tasks/${id}`).then(() => fetchData())
   }
 
   const currentSprintName = currentProjectSprints.find(s => s.id === selectedBoardSprint)?.name || 'Select Sprint'
