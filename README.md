@@ -4,6 +4,8 @@ A full-stack Agile project management web application developed during my Softwa
 
 🌐 **Live Demo:** [Check out the Live Application](http://136.111.161.239:5173)
 
+![Task Management UI](https://github.com/user-attachments/assets/da511589-25fb-4b4d-a0ad-bdea099c410b)
+
 ---
 
 ## 🛠️ Tech Stack & Architecture
@@ -29,6 +31,13 @@ A full-stack Agile project management web application developed during my Softwa
 * **📅 Gantt-Style Timeline:** Visual timeline representation for tracking sprint durations and project milestones.
 * **📋 Advanced Backlog:** Centralized backlog view with multi-variable filtering (by priority, status, assignee, and sprint).
 * **👥 Team Collaboration:** Assign tasks to team members, manage subtask lifecycles, and add timestamped comments.
+
+---
+
+## 📸 Project Evolution & Planning
+
+**Initial Architecture & Sprint Planning**
+![Planning and Architecture](https://github.com/user-attachments/assets/abc5fd63-faf6-42c5-a193-466fd9f7c6d8)
 
 ---
 
